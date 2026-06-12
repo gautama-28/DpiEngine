@@ -8,21 +8,29 @@ public class Main {
     // Called after SNI is extracted
 
     static AppType classifyFromSni(String sni) {
-        if (sni == null) return AppType.UNKNOWN;
-        String s = sni.toLowerCase();
+    if (sni == null) return AppType.UNKNOWN;
+    String s = sni.toLowerCase();
 
-        if (s.contains("youtube") || s.contains("googlevideo")) return AppType.YOUTUBE;
-        if (s.contains("facebook") || s.contains("fbcdn"))      return AppType.FACEBOOK;
-        if (s.contains("netflix"))                               return AppType.NETFLIX;
-        if (s.contains("tiktok") || s.contains("tiktokcdn"))    return AppType.TIKTOK;
-        if (s.contains("twitter") || s.contains("twimg"))       return AppType.TWITTER;
-        if (s.contains("instagram"))                             return AppType.INSTAGRAM;
-        if (s.contains("whatsapp"))                              return AppType.WHATSAPP;
-        if (s.contains("github"))                                return AppType.GITHUB;
-        if (s.contains("google"))                                return AppType.GOOGLE;
+    if (s.contains("youtube") || s.contains("googlevideo")) return AppType.YOUTUBE;
+    if (s.contains("facebook") || s.contains("fbcdn"))      return AppType.FACEBOOK;
+    if (s.contains("netflix"))                               return AppType.NETFLIX;
+    if (s.contains("tiktok") || s.contains("tiktokcdn"))    return AppType.TIKTOK;
+    if (s.contains("twitter") || s.contains("twimg"))       return AppType.TWITTER;
+    if (s.contains("instagram"))                             return AppType.INSTAGRAM;
+    if (s.contains("whatsapp"))                              return AppType.WHATSAPP;
+    if (s.contains("github"))                                return AppType.GITHUB;
+    if (s.contains("discord"))                               return AppType.DISCORD;
+    if (s.contains("zoom"))                                  return AppType.ZOOM;
+    if (s.contains("telegram"))                              return AppType.TELEGRAM;
+    if (s.contains("spotify"))                               return AppType.SPOTIFY;
+    if (s.contains("amazon") || s.contains("amazonaws"))    return AppType.AMAZON;
+    if (s.contains("microsoft") || s.contains("bing"))      return AppType.MICROSOFT;
+    if (s.contains("apple") || s.contains("icloud"))        return AppType.APPLE;
+    if (s.contains("cloudflare"))                            return AppType.CLOUDFLARE;
+    if (s.contains("google"))                                return AppType.GOOGLE;  // keep last, broad match
 
-        return AppType.UNKNOWN;
-    }
+    return AppType.UNKNOWN;
+}
 
     // ── Port-based classification (fallback when no SNI) ──────────
 
@@ -223,7 +231,9 @@ public class Main {
             }
 
             // Step 7: Update app stats
+            if (pkt.appType != null) {
             appCounts.merge(pkt.appType, 1, Integer::sum);
+                }
 
             // Reset for next iteration
             pkt = new ParsedPacket();
@@ -235,41 +245,46 @@ public class Main {
         reader.close();
 
         // ── Print Report ───────────────────────────────────────────
-        System.out.println("╔══════════════════════════════════════════╗");
-        System.out.println("║             PROCESSING REPORT            ║");
-        System.out.println("╠══════════════════════════════════════════╣");
-        System.out.printf( "║  Total Packets  : %-23d║%n", totalPackets);
-        System.out.printf( "║  TCP Packets    : %-23d║%n", tcpPackets);
-        System.out.printf( "║  UDP Packets    : %-23d║%n", udpPackets);
-        System.out.println("╠══════════════════════════════════════════╣");
-        System.out.printf( "║  Forwarded      : %-23d║%n", forwarded);
-        System.out.printf( "║  Dropped        : %-23d║%n", dropped);
-        System.out.println("╠══════════════════════════════════════════╣");
-        System.out.println("║          APPLICATION BREAKDOWN           ║");
-        System.out.println("╠══════════════════════════════════════════╣");
+        System.out.println("==========================================");
+        System.out.println("       DPI ENGINE - Simple Java Version   ");
+        System.out.println("==========================================");
 
+        // and for the report:
+        System.out.println("==========================================");
+        System.out.println("             PROCESSING REPORT            ");
+        System.out.println("==========================================");
+        System.out.printf( "  Total Packets  : %d%n", totalPackets);
+        System.out.printf( "  TCP Packets    : %d%n", tcpPackets);
+        System.out.printf( "  UDP Packets    : %d%n", udpPackets);
+        System.out.println("------------------------------------------");
+        System.out.printf( "  Forwarded      : %d%n", forwarded);
+        System.out.printf( "  Dropped        : %d%n", dropped);
+        System.out.println("------------------------------------------");
+        System.out.println("  APPLICATION BREAKDOWN");
+        System.out.println("------------------------------------------");
+        // ... rest of the report
         appCounts.entrySet().stream()
             .filter(e -> e.getValue() > 0)
             .sorted((a, b) -> b.getValue() - a.getValue())
             .forEach(e -> {
                 String blocked = rules.getBlockedApps().contains(e.getKey())
                                  ? " (BLOCKED)" : "";
-                System.out.printf("║  %-14s : %-22s║%n",
+                System.out.printf("  %-14s : %-22s %n",
                     e.getKey() + blocked, e.getValue());
             });
 
-        System.out.println("╠══════════════════════════════════════════╣");
-        System.out.println("║           DETECTED DOMAINS / SNIs        ║");
-        System.out.println("╠══════════════════════════════════════════╣");
+        System.out.println("------------------------------------------");
+        System.out.println("  DETECTED DOMAINS / SNIs");
+        System.out.println("------------------------------------------");
 
         if (sniAppMap.isEmpty()) {
-            System.out.println("║  (none detected)                         ║");
+            System.out.println("  (none detected)");
         } else {
             sniAppMap.forEach((sni, app) ->
-                System.out.printf("║  %-28s → %-8s║%n", sni, app));
+                System.out.printf("  %-30s -> %s%n", sni, app));
         }
 
-        System.out.println("╚══════════════════════════════════════════╝");
+        System.out.println("==========================================");
 
         tracker.printSummary();
         System.out.println("\n[Done] Output written to: " + outputFile);

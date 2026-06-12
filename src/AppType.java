@@ -11,5 +11,13 @@ public enum AppType {
     INSTAGRAM,
     TIKTOK,
     GITHUB,
-    WHATSAPP
+    WHATSAPP,
+    DISCORD,
+    ZOOM,
+    TELEGRAM,
+    SPOTIFY,
+    AMAZON,
+    MICROSOFT,
+    APPLE,
+    CLOUDFLARE
 }
