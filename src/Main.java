@@ -3,6 +3,50 @@ import java.util.*;
 
 public class Main {
 
+    static void loadRulesFromFile(String filename, RuleManager rules) {
+        File f = new File(filename);
+        if (!f.exists()) {
+            System.out.println("[Rules] No rules.txt found, skipping file rules.");
+            return;
+        }
+
+        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                line = line.trim();
+
+                // Skip empty lines and comments
+                if (line.isEmpty() || line.startsWith("#")) continue;
+
+                String[] parts = line.split("\\s+", 2); // split into max 2 parts
+                if (parts.length < 2) continue;
+
+                String command = parts[0].toLowerCase();
+                String value   = parts[1].trim();
+
+                switch (command) {
+                    case "block-app":
+                        try {
+                            rules.blockApp(AppType.valueOf(value.toUpperCase()));
+                        } catch (IllegalArgumentException e) {
+                            System.out.println("[Rules] Unknown app: " + value);
+                        }
+                        break;
+                    case "block-ip":
+                        rules.blockIp(value);
+                        break;
+                    case "block-domain":
+                        rules.blockDomain(value);
+                        break;
+                    default:
+                        System.out.println("[Rules] Unknown command: " + command);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("[Rules] Error reading rules.txt: " + e.getMessage());
+        }
+    }
+
     // ── App Classification ─────────────────────────────────────────
     // Maps SNI domain keywords to AppType
     // Called after SNI is extracted
@@ -113,7 +157,9 @@ public class Main {
         String outputFile = args[1];
 
         RuleManager rules = new RuleManager();
-
+        // Load rules from file first, then command line args override/add
+        loadRulesFromFile("..\\rules.txt", rules);
+        
         // Parse optional blocking flags
         for (int i = 2; i < args.length; i++) {
             switch (args[i]) {

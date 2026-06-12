@@ -1,0 +1,12 @@
+# Block streaming apps
+block-app YOUTUBE
+block-app NETFLIX
+block-app TIKTOK
+
+# Block social media
+block-domain facebook
+block-domain instagram
+block-domain twitter
+
+# Block specific IPs
+block-ip 192.168.1.50
