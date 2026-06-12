@@ -1,4 +1,4 @@
-# DPIEngine 🔍⚡
+# DPIEngine
 
 A Deep Packet Inspection (DPI) engine built entirely in pure Java.
 
